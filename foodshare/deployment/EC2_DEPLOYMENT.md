@@ -13,6 +13,14 @@ EC2 instance behind Nginx, with all data in DynamoDB/S3/SNS/CloudWatch.
 - **IAM Role**: attach a role with the permissions in `backend/aws/iam-policy.json`
   (DynamoDB, S3, SNS, CloudWatch Logs). This lets the app authenticate to AWS
   without hardcoding access keys.
+- **Elastic IP (EIP) Best Practice**: Allocate an AWS Elastic IP via AWS VPC Console / AWS CLI and associate it with the EC2 instance. Standard public IPs on non-EIP EC2 instances change dynamically on instance stop/restart. Attaching an Elastic IP preserves a fixed public IP across all reboots.
+
+```bash
+# Allocate and associate an AWS Elastic IP via AWS CLI:
+ALLOCATION_ID=$(aws ec2 allocate-address --domain vpc --query 'AllocationId' --output text)
+aws ec2 associate-address --instance-id <YOUR_EC2_INSTANCE_ID> --allocation-id $ALLOCATION_ID
+```
+
 
 ## 2. Create AWS resources (from your local machine or CloudShell)
 ```bash

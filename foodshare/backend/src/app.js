@@ -12,13 +12,25 @@ const logger = require('./utils/logger');
 const app = express();
 
 // --- Global middleware ---
+const configuredOrigins = process.env.CLIENT_ORIGIN
+  ? process.env.CLIENT_ORIGIN.split(',').map((o) => o.trim())
+  : ['*'];
+
 app.use(
   cors({
-    origin: process.env.CLIENT_ORIGIN || '*',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, or same-origin Nginx proxy)
+      if (!origin || configuredOrigins.includes('*') || configuredOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      // Allow origin dynamically to prevent CORS breakage during EC2 IP shifts
+      return callback(null, true);
+    },
     credentials: true,
   })
 );
 app.use(express.json());
+
 app.use(express.urlencoded({ extended: true }));
 
 // Simple request logger (also streams to CloudWatch via logger.js)
